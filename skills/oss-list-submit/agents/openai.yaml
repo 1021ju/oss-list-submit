@@ -1,0 +1,4 @@
+interface:
+  display_name: "开源项目上列表"
+  short_description: "把开源项目提交到对口的 awesome 列表、MCP registry 和目录站：查准入门槛、筛外链站、出 PR 草稿、记录真实状态"
+  default_prompt: "用 $oss-list-submit 给这个开源项目找对口的 awesome 列表和目录站，查门槛并写好提交草稿。"

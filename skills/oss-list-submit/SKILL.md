@@ -1,0 +1,143 @@
+---
+name: oss-list-submit
+description: Use when someone wants to promote a company open-source GitHub project by getting it into awesome-xxx lists, MCP/agent registries, developer directories or free backlink sites; or asks "提交 awesome 列表"、"开源项目推广"、"上列表"、"外链目录"、"submit to awesome list"、"list my repo"、"get more stars".
+---
+
+# 开源项目上列表 / 外链提交
+
+把一个开源项目提交到对口的 awesome 列表、registry 和目录站，并记录每一条的真实状态。**agent 负责找渠道、筛选、写草稿和核验；PR 和表单由项目作者本人的账号提交。**
+
+## 工具对照（Claude Code / Codex / Cursor 同一份 skill）
+
+| 需要 | Claude Code | Codex | Cursor |
+|---|---|---|---|
+| GitHub 查询、开 PR、定时监听 | `gh` CLI | `gh` CLI | `gh` CLI |
+| 打开目录站、填表、核验 `href` | Claude in Chrome 扩展 | [Tabgent](https://github.com/FibonaAI/tabgent)（Codex 的 Chrome 侧栏） | Cursor 自带的浏览器工具（如果开启了） |
+
+读公开页、查 `href` 也可以直接用 `curl`。
+
+这个 skill 不依赖任何付费 SEO 工具或 API key，装上就能用。没有浏览器工具时，只出草稿，由人去填表。
+
+## 三条硬规则
+
+1. **不批量代提。** 不用公司 bot 或共享账号在短时间内向多个列表开 PR。维护者会把这当 spam 关掉甚至 block，之后整个组织都受牵连。很多列表明文拒收自动/AI 生成的 PR。每个列表只开一个 PR，由作者本人的 `gh` 登录态提交，或把草稿交给作者手动开。用户要求“直接批量提”也一样：说明原因，给出逐个提交的草稿。
+2. **先定链接指向哪里。** 指向 `github.com/...` 的链接给 GitHub 涨权重，对公司域名的 SEO 没用。awesome 列表按惯例链 repo，照办。目录站、registry 允许填 website 的，优先填公司域名上的项目页（如 `<公司域名>/oss/<slug>`）；没有项目页就填 repo，并在报告里注明“这条外链不给公司域名”。
+3. **已提交 ≠ 已上线。** PR 已开、表单已交只记为“已提交”。PR 合并且列表里能看到条目、目录页公开可访问且 `href` 指向正确，才记为“已上线”。
+
+## 流程
+
+### 1. 项目底稿（先读已有信息，缺的再问）
+
+repo URL、一句话定位（≤ 15 词英文）、类别（MCP server / agent / CLI / 库 + 语言）、star 数、首次提交日期、license、公司域名上有没有项目页、提交人的 GitHub 账号。
+
+仓龄、star 数和 license 是很多列表的准入门槛。用 `gh api repos/<o>/<r>` 查 star 数和 license，首次提交日期要翻 commits 的最后一页（`gh api` 默认只拿到最近一页）。
+
+### 2. 找 awesome 列表并检查活跃度
+
+用 `gh search repos "awesome <类别关键词>" --sort stars` 加上 `references/channels.md` 里的种子列表。每个候选列表都要查以下几项，任何一项不过就跳过，并记下原因：
+
+```bash
+L=<owner/list>; R=<我们的repo名>
+gh repo view $L --json isArchived,pushedAt                                     # 是否归档
+gh api "repos/$L/commits?per_page=1" --jq '.[0].commit.committer.date'         # 默认分支最后一次提交（列表仓库基本等于最后一次合并）
+gh pr list -R $L --state merged --search "sort:updated-desc" -L 20 --json mergedAt --jq 'map(.mergedAt)|max'  # 最近一次合并 PR
+gh api "search/issues?q=repo:$L+is:pr+is:open&per_page=1" --jq .total_count      # open PR 的真实数量（gh pr list -L 会截断）
+gh pr list -R $L --state open --search "sort:created-asc" -L 1 --json createdAt --jq '.[0].createdAt'  # 最老的 open PR
+gh api "repos/$L/contents/.github/workflows" --jq '.[].name'                      # 然后逐个读 YAML 和它引用的脚本/配置；404 = 没配 CI
+gh api repos/$L/contents/README.md -H "Accept: application/vnd.github.raw" | grep -i $R  # README 查重（超过 1MB 时必须加 raw 头）
+gh search prs --repo $L $R --json number,state,author; gh search issues --repo $L $R --json number,state  # 已开的 PR/issue 查重
+```
+
+| 检查项 | 不过的情况 |
+|---|---|
+| 归档 | `isArchived: true` → 跳过 |
+| 维护 | 最后一次提交和最近一次合并都在 90 天以前 → 跳过。如果没有任何合并记录（可能是维护者直接 push），以默认分支最后一次提交为准，并在记录里注明 |
+| 提交入口 | 先确认这个列表收不收外部 PR：读 CONTRIBUTING 和 issue 模板，有些列表只收 issue（外部开 PR 会被拦）。按它的实际入口出草稿 |
+| 积压 | 不作为跳过理由，但要把数量和最老日期如实告诉作者，不要折算成“要等几天”。只收 issue 的列表，看的是 issue 队列 |
+| 准入门槛 | CONTRIBUTING、PR/issue 模板、CI 引用的脚本和配置（不能只看文件名）。star、仓龄、license、徽章、manifest 等要求不满足就跳过，并写明“补齐什么之后可以提” |
+| 对口 | 同类项目放在哪个分类，我们就放哪个；找不到合适的分类就跳过，不要硬塞 |
+| 重复 | README 已收录，或者已经有 open 的 PR/issue（不管是谁开的）→ 跳过，不要重复提 |
+
+这一步只做检查和报告。修改我们自己的 repo（补 topics、改 README、加徽章等）属于另外的动作，要先问作者。
+
+### 3. 写 awesome 条目草稿
+
+严格照抄该列表现有条目的格式：链接写法、描述长度、句尾标点、emoji 和徽章。语言、部署方式这类图标按 repo 的实际情况选，不知道就查，不要猜。
+
+- **分类**：同类项目分散在几个分类时，选和我们功能最接近的那一个，草稿里写明理由，让作者确认。
+- **插入位置**：分类本身按字母序排，就按字母序插；分类本身没排序，就加在末尾。
+- **PR 模板**：标题和正文按模板填，要勾选的项逐项确认，不能直接全勾。
+- **自动化通道**：列表如果给 bot/agent 设了专用通道（比如标题加特定标记），不要用。这个 PR 是作者本人提交的。
+
+每个列表单独出一份草稿。只收 issue 的列表就按它的 issue 模板写，模板里需要提交人本人确认的项留空，不要替他勾：
+
+```
+列表: <owner/repo>  分类: <section>  插入位置: <在哪两条之间>
+条目: - [name](url) - Description.
+PR 标题: ...
+PR 正文: ...
+```
+
+### 4. 外链 / 目录站：先过筛选关
+
+`references/channels.md` 里是候选渠道。不看 DR（站点权重分），只过下面五项。查不到的项标“未查”，不能当作通过：
+
+| 检查项 | 怎么查 | 判据 |
+|---|---|---|
+| 价格 | 打开提交页 | 免费入口包含哪些内容；加急、置顶、付费收录单独列出。零元任务不升级成付费 |
+| 领域 | 看站内同类条目 | 有开发者、AI 或开源工具类目，而且我们的项目放进去不突兀 |
+| 有没有人专门搜这个站 | `curl -s "https://suggestqueries.google.com/complete/search?client=firefox&q=<站名>"`（Google 搜索联想，不需要 key） | 联想词里出现“站名 + reviews / login / alternative / submit”这类品牌搜索，说明是真站；只联想出站名本身或无关词，就要警惕是农场站 |
+| 近 7 天新页面有没有收录 | `site:<domain>` 配合 Google 的“过去一周”筛选，或抽一条最近收录的条目页去搜 | 新页面一周内能被收录，我们的条目才有机会被看到 |
+| 同行有没有用 | 在目录站里搜 1–2 个同类优秀开源项目的名字；或者看同行 README 里的 “Featured on” 徽章 | 同行在这里有条目，说明渠道可信 |
+
+另外，上线后要记录链接的 `rel`。`nofollow` 不代表失败，只是如实记下来；`noopener noreferrer` 不等于 `nofollow`。
+
+### 5. 提交
+
+- awesome PR：由作者本人提交，可以是作者自己运行 `gh pr create`，也可以拿草稿去网页上开。每个列表一个 PR，每天不超过 3–5 个，避免集中刷屏。
+- 目录表单：用作者或公司指定的账号逐个填写。验证码、邮箱验证、组织认领这类必须人工完成的步骤交给人，先推进其他渠道，不要卡在原地。
+- 密码、token、验证码一律不写进表格或日志。
+
+### 6. 记录
+
+每一个提交动作记一行，写进 `~/.oss-list-submit/submissions.csv`（表头见 `references/tracker-template.csv`，文件不存在就先拷一份）。第 7 步的监听脚本读的就是这个文件，所以“PR或表单回执链接”一栏要填完整的 PR/issue 链接。团队另有共享表的话，两边都记。
+
+状态只用这几种：`草稿` / `已提交` / `已上线` / `被拒（原因）` / `跳过（原因）`。汇报时把各状态分开计数。**不要把已提交的数量说成新增外链数。**
+
+### 7. 装定时监听（提交完 PR/issue 后）
+
+先问用户要不要装（它会在本机常驻一个定时任务）。同意后运行：
+
+```bash
+bash <本 skill 目录>/scripts/install_watch.sh        # 默认每 6 小时检查一次；--uninstall 卸载
+```
+
+- macOS 用 launchd，Linux 用 crontab，只依赖 `python3` 和已登录的 `gh`，Claude Code、Codex、Cursor 都能用。
+- 检测到这些变化时，会弹系统通知：PR 合并、issue 被处理、PR/issue 被关闭、维护者有新回复或 review。合并之后它会去读列表的 README，确认条目真的出现了，再把状态改成“已上线”。
+- 想同时推到飞书或 Slack 群：在 `~/.oss-list-submit/config` 里写一行 `NOTIFY_WEBHOOK=<webhook 地址>`。
+- 想马上查一次：`python3 <本 skill 目录>/scripts/watch_submissions.py`，加 `--dry-run` 就只看不写。
+- 收到“维护者回复了”要尽快回。维护者提了修改意见没人理，PR 通常会被直接关掉。
+
+目录站的表单没有 PR 可以监听，一周后手动复查一次：页面有没有上线，`href` 和 `rel` 是什么。
+
+## 文案规则（条目描述、PR / issue 正文）
+
+维护者每天收到大量 AI 生成的 PR，一看到营销腔就会直接关掉。
+
+- **条目描述**：一句话说清它做什么，长度和句式照抄相邻条目。写具体功能（“reads the current page, fills forms”），不写形容词。
+- **禁用词**：revolutionary、seamless、powerful、cutting-edge、game-changing、next-gen、ultimate、effortless、supercharge、unlock、leverage、robust、best-in-class。
+- **只写能核实的事实**：star 数要带日期；没有的用户数、下载量不要写。还在早期就写 early preview。
+- **PR / issue 正文写 3–5 句**：加了什么、放在哪个分类以及理由、提交人和项目的关系（比如“I'm on the team behind X”）。不写 “I'm excited to share”，不加 emoji（列表要求的除外）。
+- 写长文（比如发布帖）时，如果装了 anti-ai-slop-writing 之类的写作 skill，可以配合使用。本 skill 不依赖它。
+
+## 常见错误
+
+| 错误 | 正确做法 |
+|---|---|
+| 用 bot 账号一次给 20 个列表开 PR | 作者本人提交，每个列表一个 PR，分几天进行 |
+| 按 DR 从高到低挑外链站 | 只过第 4 步的五项筛选，DR 高不等于对口，也不等于有人看 |
+| 目录站填的是 GitHub repo | 有公司项目页就填项目页 |
+| 条目格式自己发挥 | 照抄相邻条目，按字母序插入 |
+| 所有列表用同一句描述 | 按每个列表的风格和长度改写 |
+| PR 开了就算完成 | 装第 7 步的监听；合并且 README 里能看到条目才算上线 |
+| 往不对口的分类硬塞 | 跳过，并写下原因 |
