@@ -7,7 +7,7 @@ set -euo pipefail
 
 DIR="$(cd "$(dirname "$0")" && pwd -P)"
 SCRIPT="$DIR/watch_submissions.py"
-PY="$(command -v python3)"
+PY="$(command -v python3 || true)"
 GH="$(command -v gh || true)"
 LABEL="com.oss-list-submit.watch"
 DATA="$HOME/.oss-list-submit"
@@ -24,6 +24,7 @@ if [[ "${1:-}" == "--uninstall" ]]; then
 fi
 
 HOURS="${1:-6}"
+[[ -n "$PY" ]] || { echo "python3 not found. Install Python 3 first"; exit 1; }
 [[ -n "$GH" ]] || { echo "gh not found. Install it and run gh auth login first"; exit 1; }
 gh auth status >/dev/null 2>&1 || { echo "gh is not logged in. Run gh auth login first"; exit 1; }
 mkdir -p "$DATA"
@@ -49,7 +50,7 @@ EOF
   launchctl load "$PLIST"
 else
   LINE="0 */$HOURS * * * PATH=$PATHS $PY $SCRIPT >/dev/null 2>>$DATA/watch.err"
-  (crontab -l 2>/dev/null | grep -v "$SCRIPT"; echo "$LINE") | crontab -
+  (crontab -l 2>/dev/null | grep -v "$SCRIPT" || true; echo "$LINE") | crontab -
 fi
 
 echo "Installed: checks the PRs/issues in $DATA/submissions.csv every $HOURS hours"
