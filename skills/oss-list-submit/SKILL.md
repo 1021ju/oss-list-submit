@@ -92,11 +92,30 @@ PR 正文: ...
 
 另外，上线后要记录链接的 `rel`。`nofollow` 不代表失败，只是如实记下来；`noopener noreferrer` 不等于 `nofollow`。
 
-### 5. 提交
+### 5. 提交（永远用提交人自己的 GitHub 账号）
 
-- awesome PR：由作者本人提交，可以是作者自己运行 `gh pr create`，也可以拿草稿去网页上开。每个列表一个 PR，每天不超过 3–5 个，避免集中刷屏。
-- 目录表单：用作者或公司指定的账号逐个填写。验证码、邮箱验证、组织认领这类必须人工完成的步骤交给人，先推进其他渠道，不要卡在原地。
-- 密码、token、验证码一律不写进表格或日志。
+先运行 `gh auth status` 看当前环境，再选一种方式：
+
+**A. 本机 `gh` 已登录提交人自己的账号（Claude Code / Codex / Cursor 的常见情况）**
+
+把草稿逐条给用户看，用户明确说“提交”之后，agent 代为执行：
+- 收 PR 的列表：`gh repo fork <list> --clone=false`，在 fork 里建分支，改那一行，然后 `gh pr create -R <list>`。
+- 只收 issue 的列表：`gh issue create -R <list>`；如果用的是 issue 表单，就按表单字段拼好正文。
+
+每确认一条才提交一条，不能一次确认就批量提交，每天不超过 3–5 个。提交后把链接写进第 6 步的记录。
+
+**B. 没有 `gh`，或者登录的不是提交人本人（比如 Fleet 等云端 agent 用的是 agent 自己的账号）**
+
+不要用 agent 的账号提交，改为给提交人发链接：
+- **只收 issue 的列表**：发一个已经预填好内容的 issue 链接。提交人点开，检查一遍，勾选模板里的确认项，点 Create 就提交了。这个 issue 属于点开链接的人自己的账号。生成方法：
+  ```bash
+  python3 <本 skill 目录>/scripts/issue_link.py <owner/list> fields.json
+  ```
+  `fields.json` 的字段名取自列表 `.github/ISSUE_TEMPLATE/*.yml` 里每一项的 `id`，再加上 `template` 和 `title`。勾选框故意不预填，必须由提交人自己勾。
+- **收 PR 的列表**：GitHub 不支持通过链接预填文件改动，只能发 `https://github.com/<list>/edit/<默认分支>/README.md` 这个网页编辑链接，同时告诉对方“在第几行、哪两条之间粘贴这一行”，并附上 PR 标题和正文。点开后 GitHub 会自动 fork，粘贴后点 Propose changes，再点 Create pull request，大约一分钟。
+- 提交人把提交后的链接发回来，agent 再写进记录。
+
+**目录站表单**：用作者或公司指定的账号逐个填写。验证码、邮箱验证、组织认领这类必须人工完成的步骤交给人，先推进其他渠道，不要卡在原地。密码、token、验证码一律不写进表格或日志。
 
 ### 6. 记录
 
@@ -134,7 +153,7 @@ bash <本 skill 目录>/scripts/install_watch.sh        # 默认每 6 小时检�
 
 | 错误 | 正确做法 |
 |---|---|
-| 用 bot 账号一次给 20 个列表开 PR | 作者本人提交，每个列表一个 PR，分几天进行 |
+| 用 bot 账号一次给 20 个列表开 PR | 用提交人自己的账号，每条单独确认，分几天进行；云端 agent 只发预填链接 |
 | 按 DR 从高到低挑外链站 | 只过第 4 步的五项筛选，DR 高不等于对口，也不等于有人看 |
 | 目录站填的是 GitHub repo | 有公司项目页就填项目页 |
 | 条目格式自己发挥 | 照抄相邻条目，按字母序插入 |
