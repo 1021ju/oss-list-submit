@@ -7,7 +7,7 @@
 **通用（推荐）**：一行命令同时装进 Claude Code、Codex、Cursor，需要本机有 Node.js。
 
 ```bash
-npx skills add <OWNER>/oss-list-submit -g -a '*' -y
+npx skills add 1021ju/oss-list-submit -g -a '*' -y
 ```
 
 更新用 `npx skills update oss-list-submit`。只想装到某一个，把 `-a '*'` 换成 `-a claude-code`、`-a codex` 或 `-a cursor`。
@@ -16,8 +16,8 @@ npx skills add <OWNER>/oss-list-submit -g -a '*' -y
 
 | 工具 | 怎么装 |
 |---|---|
-| Claude Code | 在 Claude Code 里输入 `/plugin install oss-list-submit --marketplace <OWNER>/oss-list-submit` |
-| Codex | 对 Codex 说：`$skill-installer install https://github.com/<OWNER>/oss-list-submit/tree/main/skills/oss-list-submit` |
+| Claude Code | 在 Claude Code 里输入 `/plugin install oss-list-submit --marketplace 1021ju/oss-list-submit` |
+| Codex | 对 Codex 说：`$skill-installer install https://github.com/1021ju/oss-list-submit/tree/main/skills/oss-list-submit` |
 | Cursor | 用上面的通用命令 |
 
 两种方式只选一种，同时用会在 Claude Code 里出现两份同名 skill。
