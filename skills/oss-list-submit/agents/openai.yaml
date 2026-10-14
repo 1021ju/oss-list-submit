@@ -1,0 +1,4 @@
+interface:
+  display_name: "Open-source list submissions"
+  short_description: "Submit an open-source project to the awesome lists, MCP registries and directories that fit it: check entry requirements, screen backlink sites, draft PRs, and record real status"
+  default_prompt: "Use $oss-list-submit to find the awesome lists and directories that fit this open-source project, check their requirements, and write submission drafts."

@@ -1,0 +1,5 @@
+{
+  "name": "oss-list-submit",
+  "description": "Awesome-list / directory submission for open-source projects, with a PR merge watcher",
+  "version": "0.1.0"
+}
