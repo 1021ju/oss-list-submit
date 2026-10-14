@@ -16,12 +16,12 @@ description: Use when someone wants to promote a company open-source GitHub proj
 
 读公开页、查 `href` 也可以直接用 `curl`。
 
-这个 skill 不依赖任何付费 SEO 工具或 API key，装上就能用。没有浏览器工具时，只出草稿，由人去填表。
+这个 skill 不依赖任何付费 SEO 工具或 API key。开始前先确认三件事：`gh` 能不能用、能不能联网、有没有**能点击和填表**的浏览器工具（只能搜索或读网页的不算）。没有能填表的浏览器工具时，目录站只出文案，由人去填。
 
 ## 三条硬规则
 
 1. **不批量代提。** 不用公司 bot 或共享账号在短时间内向多个列表开 PR。维护者会把这当 spam 关掉甚至 block，之后整个组织都受牵连。很多列表明文拒收自动/AI 生成的 PR。每个列表只开一个 PR，由作者本人的 `gh` 登录态提交，或把草稿交给作者手动开；同一个账号每天不超过 3–5 个。用户要求“今天全部提完”也一样：说明原因，超出的存成草稿，改天接着提。
-2. **先定链接指向哪里。** 指向 `github.com/...` 的链接给 GitHub 涨权重，对公司域名的 SEO 没用。awesome 列表按惯例链 repo，照办。目录站、registry 允许填 website 的，优先填公司域名上的项目页（如 `<公司域名>/oss/<slug>`）；没有项目页就填 repo，并在报告里注明“这条外链不给公司域名”。
+2. **先定链接指向哪里。** 指向 `github.com/...` 的链接给 GitHub 涨权重，不直接给公司域名加分。awesome 列表按惯例链 repo，照办。目录站、registry 允许填 website 的，优先填公司域名上的项目页（如 `<公司域名>/oss/<slug>`）；没有项目页就填 repo，并在报告里注明“这条外链不给公司域名”。
 3. **已提交 ≠ 已上线。** PR 已开、表单已交只记为“已提交”。PR 合并且列表里能看到条目、目录页公开可访问且 `href` 指向正确，才记为“已上线”。
 
 ## 流程
@@ -40,7 +40,9 @@ gh api "repos/$O/$P/commits?per_page=1&page=N" --jq '.[0].commit.committer.date'
 gh api users/$O --jq .blog                                          # 组织官网（组织也用 users/ 接口）
 ```
 
-**预检：repo 现在能不能拿出去提。** README 里还写着 private / WIP / coming soon、没有安装说明、没有 license，或者 repo 还没公开，先停下来告诉作者要补什么，不要往下走。没有 topics、没填 homepage 也一并提醒（加不加由作者决定）。
+**预检：repo 现在能不能拿出去提。**
+- **硬阻塞**（repo 没公开、没有 license、没有安装说明）：告诉作者要补什么，只做只读调研和草稿，不提交。
+- **能顺手修的**（README 里残留 private / WIP 之类的旧说法、没有 topics、没填 homepage）：列给作者，建议先修再提；作者说不修也可以继续。
 
 ### 2. 找 awesome 列表并检查活跃度
 
@@ -50,18 +52,18 @@ gh api users/$O --jq .blog                                          # 组织官�
 L=<owner/list>; R=<我们的repo名>
 gh repo view $L --json isArchived                                              # 是否归档（pushedAt 含任何分支的 push，不能当维护信号）
 gh api "repos/$L/commits?per_page=1" --jq '.[0].commit.committer.date'         # 默认分支最后一次提交（列表仓库基本等于最后一次合并）
-gh pr list -R $L --state merged --search "sort:updated-desc" -L 20 --json mergedAt --jq 'map(.mergedAt)|max'  # 最近一次合并 PR；输出 null = 从没合并过 PR
+gh api "search/issues?q=repo:$L+is:pr+is:merged+merged:>=<90天前的日期>&per_page=1" --jq .total_count  # 近 90 天合并了几个 PR
 gh api "search/issues?q=repo:$L+is:pr+is:open&per_page=1" --jq .total_count      # open PR 的真实数量（gh pr list -L 会截断）
 gh pr list -R $L --state open --search "sort:created-asc" -L 1 --json createdAt --jq '.[0].createdAt'  # 最老的 open PR
-gh api "repos/$L/contents/.github/workflows" --jq '.[].name' 2>/dev/null || echo "没有 CI"   # 有的话逐个读 YAML 和它引用的脚本/配置
-gh api repos/$L/contents/README.md -H "Accept: application/vnd.github.raw" | grep -i $R || echo "README 里没有"  # README 查重（超过 1MB 时必须加 raw 头）
+gh api "repos/$L/contents/.github/workflows" --jq '.[].name'   # 报 Not Found (HTTP 404) = 没配 CI；403、限流等其他报错要重试，不能当成没有。有的话逐个读 YAML 和它引用的脚本/配置
+gh api repos/$L/contents/README.md -H "Accept: application/vnd.github.raw" > /tmp/list-readme.md && { grep -i $R /tmp/list-readme.md || echo "README 里没有"; }  # README 查重（超过 1MB 时必须加 raw 头）；大文件偶尔下载到一半断掉（报 unexpected EOF），这时不会误报“没有”，重试即可。列表拆成多个文件的，要连同那些文件一起查
 gh search prs --repo $L $R --json number,state,author; gh search issues --repo $L $R --json number,state  # 已开的 PR/issue 查重
 ```
 
 | 检查项 | 不过的情况 |
 |---|---|
 | 归档 | `isArchived: true` → 跳过 |
-| 维护 | 最后一次提交和最近一次合并都在 90 天以前 → 跳过。如果没有任何合并记录（可能是维护者直接 push），以默认分支最后一次提交为准，并在记录里注明 |
+| 维护 | 最后一次提交在 90 天以前，且近 90 天没有合并任何 PR → 跳过。近 90 天合并数为 0 但最近有提交（可能是维护者直接 push），记下来告诉作者 |
 | 提交入口 | 先确认这个列表收不收外部 PR：读 CONTRIBUTING 和 issue 模板，有些列表只收 issue（外部开 PR 会被拦）。按它的实际入口出草稿。PR 和表单都开放时，选 CONTRIBUTING 推荐的那个；没写就选 PR，进度看得见 |
 | 积压 | 本身不作为跳过理由，把数量和最老日期如实告诉作者，不要折算成“要等几天”。如果最老的 open PR 超过半年，而且近期合并的几乎都是维护者自己的 PR，就写明“大概率排不进去”，由作者决定提不提。只收 issue 的列表，看的是 issue 队列 |
 | 准入门槛 | CONTRIBUTING、PR/issue 模板、CI 引用的脚本和配置（不能只看文件名）。star、仓龄、license、徽章、manifest 等要求不满足就跳过，并写明“补齐什么之后可以提”。只写了模糊门槛（比如“不收太新的项目”）的，把原话给作者，由作者判断 |
@@ -72,12 +74,12 @@ gh search prs --repo $L $R --json number,state,author; gh search issues --repo $
 
 ### 3. 写 awesome 条目草稿
 
-严格照抄该列表现有条目的**格式**：链接写法、描述长度、句尾标点、emoji 和徽章。**措辞不照抄**：相邻条目用了破折号、“AI-powered” 这类禁用写法，我们的条目照样按文末“文案规则”写。语言、部署方式这类图标按 repo 的实际情况选，不知道就查，不要猜。
+严格照抄该列表现有条目的**格式**：链接写法、描述长度、句尾标点、emoji 和徽章。**措辞不照抄**：相邻条目用了 “AI-powered” 这类营销词，我们的条目照样按文末“文案规则”写。列表明文规定的格式（比如分隔符必须用破折号）照列表的来，它优先于我们的标点规则。语言、部署方式这类图标按 repo 的实际情况选，不知道就查，不要猜。
 
 - **分类**：同类项目分散在几个分类时，选和我们功能最接近的那一个，草稿里写明理由，让作者确认。
 - **插入位置**：分类本身按字母序排，就按字母序插；分类本身没排序，就加在末尾。
 - **PR 模板**：标题和正文按模板填，要勾选的项逐项核对，属实的才勾，不能直接全勾。
-- **自动化通道**：列表如果给 bot/agent 设了专用通道（比如标题加特定标记），不要用。这个 PR 是作者本人提交的。
+- **对方关于 AI 的规定照办**：列表明文拒收 AI 生成的 PR 或描述，就请作者自己写描述再提，或者跳过；用作者账号提交不等于豁免。列表给 AI 辅助的提交设了专门的标记或通道，就按要求标上。
 
 每个列表单独出一份草稿。只收 issue 的列表就按它的 issue 模板写，模板里的确认项按属实与否标好，在第 5 步的批量确认里让提交人看到勾了哪些：
 
@@ -98,7 +100,7 @@ PR 正文: ...
 |---|---|---|
 | 价格 | 打开提交页 | 免费入口包含哪些内容；加急、置顶、付费收录单独列出。零元任务不升级成付费 |
 | 领域 | 看站内同类条目 | 有开发者、AI 或开源工具类目，而且我们的项目放进去不突兀 |
-| 有没有人专门搜这个站 | `curl -s "https://suggestqueries.google.com/complete/search?client=firefox&q=<站名>"`（Google 搜索联想，不需要 key） | 联想词里出现“站名 + reviews / login / alternative / submit”这类品牌搜索，说明是真站；只联想出站名本身或无关词，就要警惕是农场站 |
+| 有没有人专门搜这个站 | `curl -s "https://suggestqueries.google.com/complete/search?client=firefox&q=<站名>"`（Google 搜索联想，不需要 key） | 联想词里出现“站名 + reviews / login / alternative / submit”这类品牌搜索，偏向是真站；只联想出站名本身或无关词，要多留个心眼。这是弱信号，小众真站也可能没有联想，不能单凭这一项否决 |
 | 近 7 天新页面有没有收录 | `site:<domain>` 配合 Google 的“过去一周”筛选，或抽一条最近收录的条目页去搜 | 新页面一周内能被收录，我们的条目才有机会被看到 |
 | 同行有没有用 | 在目录站里搜 1–2 个同类优秀开源项目的名字；或者看同行 README 里的 “Featured on” 徽章 | 同行在这里有条目，说明渠道可信 |
 
@@ -130,7 +132,7 @@ PR 正文: ...
   ```
   `fields.json` 的字段名取自列表 `.github/ISSUE_TEMPLATE/*.yml` 里每一项的 `id`，再加上 `template` 和 `title`。勾选框故意不预填，必须由提交人自己勾。
 - **收 PR 的列表**：GitHub 不支持通过链接预填文件改动，只能发 `https://github.com/<list>/edit/<默认分支>/README.md` 这个网页编辑链接，同时告诉对方“在第几行、哪两条之间粘贴这一行”，并附上 PR 标题和正文。点开后 GitHub 会自动 fork，粘贴后点 Propose changes，再点 Create pull request，大约一分钟。
-- 提交人把提交后的链接发回来，agent 再写进记录。
+- 请提交人把提交后的链接发回来，agent 写进记录。没发回来的，用第 6 步的搜索命令找。
 
 **目录站：agent 用浏览器工具自己提交，人只负责登录。**
 
@@ -138,14 +140,14 @@ PR 正文: ...
 - 遇到注册、登录、邮箱验证、验证码，停下来请用户在浏览器里完成，完成后 agent 接着往下做。等用户的时候先去做下一个站，不要卡住。agent 不替人注册账号，也不输入密码。
 - 网址字段优先填公司官网上的项目页，没有就填 repo。描述要按每个站的受众改写，不要全部用同一段。
 - 提交后打开公开页或后台，核对产品名、描述、网址字段实际的 `href`。审核中的标记为“已提交”，公开页能看到且链接正确的才算“已上线”。
-- 没有浏览器工具的环境（比如纯 CLI），就把站点和要填的内容列给用户，让用户自己去填。
+- 没有能点击和填表的浏览器工具（比如纯 CLI，或只能读网页），就把站点和要填的内容列给用户，让用户自己去填。
 - 密码、token、验证码一律不写进表格或日志。
 
 ### 6. 记录
 
 每一个提交动作记一行，写进 `~/.oss-list-submit/submissions.csv`（表头见 `references/tracker-template.csv`，文件不存在就先拷一份）。第 7 步的监听脚本读的就是这个文件，所以“PR或表单回执链接”一栏要填完整的 PR/issue 链接。团队另有共享表的话，两边都记。
 
-用了方式 B（发链接）的，提交人自己点完后不用回来贴链接，运行下面两条就能找到：
+用了方式 B（发链接）、提交人又没把链接发回来的，用下面的命令找。搜索索引有延迟，刚提交的可能搜不到，搜不到不等于没提交：
 
 ```bash
 gh search prs "<owner>/<repo>" --json url,author,state ; gh search issues "<owner>/<repo>" --json url,author,state
@@ -179,13 +181,13 @@ bash <本 skill 目录>/scripts/install_watch.sh        # 默认每 6 小时检�
 - **禁用词**：revolutionary、seamless、powerful、cutting-edge、game-changing、next-gen、ultimate、effortless、supercharge、unlock、leverage、robust、best-in-class、empower、elevate、streamline、harness、delve、comprehensive、innovative、transform、in today's fast-paced world；中文同理：赋能、颠覆、一站式、极致、全方位、助力。想用的时候换成具体做了什么。
 - **写具体动作，不写形容词**：“reads the current tab and fills forms” 胜过 “powerful browser automation”。
 - **只写能核实的事实**：star 数要带日期；没有的用户数、下载量、案例一律不编。还在早期就写 early preview。
-- **标点和格式**：破折号（—）全文最多一个；不用感叹号；不用 emoji 当列表符号；不堆 hashtag。
+- **标点和格式**：每条提交里破折号（—）最多一个（列表格式规定的除外）；不用感叹号；不用 emoji 当列表符号；不堆 hashtag。
 - **别三个三个地列**：特性、优点不要凑成三条一组，有几条写几条。
 - **句子长短要混着来**，不要连着三句一样长、一样的结构。
 
 **按场景：**
 - **awesome 列表条目**：一句话说清它做什么，长度和句式照抄相邻条目。
-- **PR / issue 正文**：3–5 句，写加了什么、放在哪个分类以及理由、提交人和项目的关系（比如 “I'm on the team behind X”）。不写 “I'm excited to share”。
+- **PR / issue 正文**：自己写的说明部分 3–5 句（模板要求的 checklist 照填，不算在内），写加了什么、放在哪个分类以及理由、提交人和项目的关系（比如 “I'm on the team behind X”）。不写 “I'm excited to share”。
 - **目录站表单**：一句话介绍（tagline）写“给谁、做什么”，不写口号；详细描述按这个站的受众改写，每个站不一样；分类和标签只选真对口的。
 - **Show HN / V2EX / 周刊自荐**：用第一人称、像人说话（用缩写 I'm / it's / don't），开头直接说做了什么、为什么做；写一个真实的限制或还没解决的问题；不用标题和加粗，不以 “As a developer, I…” 开头。发之前给用户过目。
 
@@ -200,5 +202,5 @@ bash <本 skill 目录>/scripts/install_watch.sh        # 默认每 6 小时检�
 | 目录站填的是 GitHub repo | 有公司项目页就填项目页 |
 | 条目格式自己发挥 | 照抄相邻条目，按字母序插入 |
 | 所有列表用同一句描述 | 按每个列表的风格和长度改写 |
-| PR 开了就算完成 | 装第 7 步的监听；合并且 README 里能看到条目才算上线 |
+| PR 开了就算完成 | 合并且 README 里能看到条目才算上线；用第 7 步的监听或定期手动查 |
 | 往不对口的分类硬塞 | 跳过，并写下原因 |
