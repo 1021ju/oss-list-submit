@@ -1,0 +1,8 @@
+{
+  "name": "oss-list-submit",
+  "owner": { "name": "oss-list-submit maintainers" },
+  "metadata": { "description": "Get open-source projects into the right awesome lists and directories, and get notified when PRs merge", "version": "0.1.0" },
+  "plugins": [
+    { "name": "oss-list-submit", "description": "Awesome-list / directory submission for open-source projects, with a PR merge watcher", "source": "./" }
+  ]
+}

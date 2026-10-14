@@ -2,17 +2,27 @@
 
 帮开源项目找到对口的 awesome 列表、MCP registry 和开发者目录站：检查准入门槛，写好提交草稿，PR 合并时通知你。适用于 Claude Code、Codex 和 Cursor。
 
-## 安装（一行）
+## 安装
+
+**通用（推荐）**：一行命令同时装进 Claude Code、Codex、Cursor，需要本机有 Node.js。
 
 ```bash
 npx skills add <OWNER>/oss-list-submit -g -a '*' -y
 ```
 
-这行命令会把 skill 装到本机所有支持的 agent 里（Claude Code、Codex、Cursor 等）。只想装到某一个，就把 `-a '*'` 换成 `-a claude-code`、`-a codex` 或 `-a cursor`。
+更新用 `npx skills update oss-list-submit`。只想装到某一个，把 `-a '*'` 换成 `-a claude-code`、`-a codex` 或 `-a cursor`。
 
-更新：`npx skills update oss-list-submit`
+**没有 Node，就用各自的原生方式：**
 
-**前置条件**：Node.js（用来运行 npx）、[`gh`](https://cli.github.com/)，并且已经执行过 `gh auth login`。不需要任何付费工具或 API key。
+| 工具 | 怎么装 |
+|---|---|
+| Claude Code | 在 Claude Code 里输入 `/plugin install oss-list-submit --marketplace <OWNER>/oss-list-submit` |
+| Codex | 对 Codex 说：`$skill-installer install https://github.com/<OWNER>/oss-list-submit/tree/main/skills/oss-list-submit` |
+| Cursor | 用上面的通用命令 |
+
+两种方式只选一种，同时用会在 Claude Code 里出现两份同名 skill。
+
+**前置条件**：安装并登录 [`gh`](https://cli.github.com/)（`gh auth login`）。不需要任何付费工具或 API key。
 
 ## 怎么用
 
