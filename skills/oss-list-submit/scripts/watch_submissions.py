@@ -71,7 +71,7 @@ def notify(title, body, cfg):
         subprocess.run(["notify-send", title, body], capture_output=True)
     hook = cfg.get("NOTIFY_WEBHOOK")
     if hook:
-        text = "%s\n%s" % (title, body)
+        text = "[oss-list-submit] %s\n%s" % (title, body)
         if "feishu" in hook or "larksuite" in hook:
             payload = {"msg_type": "text", "content": {"text": text}}
         else:
@@ -128,7 +128,8 @@ def main():
             continue
         snap, needle = got
         old = state.get(snap["url"])
-        name = "%s（%s）" % (snap["list"], row.get("项目", ""))
+        who = row.get("提交人账号", "")
+        name = "%s（%s%s）" % (snap["list"], row.get("项目", ""), "，提交人 " + who if who else "")
         if old is None:
             # 第一次见到：还开着就只记基线；已经合并/关闭的照常走下面的通知和状态更新
             old = {"state": "OPEN", "others": snap["others"]}

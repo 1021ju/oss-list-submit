@@ -133,7 +133,7 @@ bash <本 skill 目录>/scripts/install_watch.sh        # 默认每 6 小时检�
 
 - macOS 用 launchd，Linux 用 crontab，只依赖 `python3` 和已登录的 `gh`，Claude Code、Codex、Cursor 都能用。
 - 检测到这些变化时，会弹系统通知：PR 合并、issue 被处理、PR/issue 被关闭、维护者有新回复或 review。合并之后它会去读列表的 README，确认条目真的出现了，再把状态改成“已上线”。
-- 想同时推到飞书或 Slack 群：在 `~/.oss-list-submit/config` 里写一行 `NOTIFY_WEBHOOK=<webhook 地址>`。
+- 想同时推到飞书或 Slack 群：在 `~/.oss-list-submit/config` 里写一行 `NOTIFY_WEBHOOK=<webhook 地址>`。团队共用一个群机器人的话，地址找管理这个机器人的人要。**webhook 地址谁拿到都能往群里发消息，不能写进 repo、skill 或提交记录。** 每条消息都以 `[oss-list-submit]` 开头，可以在机器人的安全设置里把它设成关键词。
 - 想马上查一次：`python3 <本 skill 目录>/scripts/watch_submissions.py`，加 `--dry-run` 就只看不写。
 - 收到“维护者回复了”要尽快回。维护者提了修改意见没人理，PR 通常会被直接关掉。
 
