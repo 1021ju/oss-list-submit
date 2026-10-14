@@ -1,24 +1,24 @@
-# 候选渠道（种子清单）
+# Candidate channels (seed list)
 
-awesome 列表的种子清单。每个列表都要按 SKILL.md 第 2 步重新检查，状态以检查当天为准。
+Seed list of awesome lists. Re-check every list using step 2 of SKILL.md; its status is whatever you find on the day you check.
 
-## A. awesome 列表（GitHub PR，链接指向 repo）
+## A. Awesome lists (GitHub PR, link points to the repo)
 
-按项目类别搜，不要只用下面这几个：
+Search by project category; don't use only the ones below:
 
 ```bash
 gh search repos "awesome mcp" --sort stars -L 20
-gh search repos "awesome <语言或领域>" --sort stars -L 20
+gh search repos "awesome <language or domain>" --sort stars -L 20
 ```
 
-| 类别 | 种子 |
+| Category | Seeds |
 |---|---|
-| MCP server | punkpeye/awesome-mcp-servers（2026-10-14 实测：仍有合并，没有 star 门槛；CI 要求新条目带 Glama 评分徽章，所以先上 Glama。open PR 有 2.8k 个，最老的从 2025-12 开到现在，要做好长期排队的准备）。appcypher/awesome-mcp-servers 已归档，不要提 |
-| Claude / agent / skill | 搜 `awesome claude`、`awesome claude-code`、`awesome ai-agents`、`awesome claude skills` |
-| Codex / 浏览器 agent（2026-10-14 实测） | milisp/awesome-codex-cli（只收 issue，要求有真实 Codex 集成和采用证据）、RoggeOhta/awesome-codex-cli（积压约 300 个 PR）、hashgraph-online/awesome-codex-plugins（必须有 `.codex-plugin/plugin.json`，且扫描分 ≥80）、ianwieds/awesome-browser-agents（CI 要求 ≥10 star）、e2b-dev/awesome-ai-agents（PR 积压近千，最老的放了两年）。themeselection/best-chrome-extensions 已经 200 天没合并，而且要求 Chrome Web Store 链接。另外可看：steel-dev/awesome-web-agents、supernalintelligence/Awesome-Gui-Agents、jqueryscript/awesome-codex（issue）、ichangyou/awesome-codex |
-| 语言生态 | awesome-python / awesome-go / awesome-rust / awesome-nodejs 等（门槛通常更高，看 CONTRIBUTING） |
-| 自托管 / 替代品 | awesome-selfhosted（对 license 和部署方式有要求） |
+| MCP server | punkpeye/awesome-mcp-servers (checked 2026-10-14: still merging, no star requirement; CI requires new entries to carry a Glama score badge, so get on Glama first. There are 2.8k open PRs and the oldest has been open since 2025-12, so expect a long wait). appcypher/awesome-mcp-servers is archived; don't submit |
+| Claude / agent / skill | Search `awesome claude`, `awesome claude-code`, `awesome ai-agents`, `awesome claude skills` |
+| Codex / browser agent (checked 2026-10-14) | milisp/awesome-codex-cli (issues only; requires a real Codex integration and evidence of adoption), RoggeOhta/awesome-codex-cli (backlog of about 300 PRs), hashgraph-online/awesome-codex-plugins (must have `.codex-plugin/plugin.json` and a scan score ≥80), ianwieds/awesome-browser-agents (CI requires ≥10 stars), e2b-dev/awesome-ai-agents (PR backlog close to a thousand, oldest sitting for two years). themeselection/best-chrome-extensions hasn't merged anything in 200 days and requires a Chrome Web Store link. Also worth a look: steel-dev/awesome-web-agents, supernalintelligence/Awesome-Gui-Agents, jqueryscript/awesome-codex (issue), ichangyou/awesome-codex |
+| Language ecosystems | awesome-python / awesome-go / awesome-rust / awesome-nodejs, etc. (usually stricter requirements; see CONTRIBUTING) |
+| Self-hosted / alternatives | awesome-selfhosted (has requirements on license and deployment method) |
 
-## 其他渠道
+## Other channels
 
-awesome 列表以外的目录站、registry、中文渠道、发布日渠道，统一放在 `directories.md`（已经核实过，分好层）。
+Directories, registries, Chinese channels and launch-day channels outside awesome lists are all in `directories.md` (verified and tiered).

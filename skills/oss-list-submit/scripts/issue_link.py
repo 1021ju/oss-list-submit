@@ -12,12 +12,12 @@ import json
 import sys
 import urllib.parse
 
-MAX_URL = 8000  # 浏览器/GitHub 对超长 URL 不可靠，超过就把长字段缩短
+MAX_URL = 8000  # browsers/GitHub are unreliable with very long URLs; shorten long fields if over this
 
 repo, path = sys.argv[1], sys.argv[2]
 fields = json.load(open(path, encoding="utf-8"))
 url = "https://github.com/%s/issues/new?%s" % (
     repo, urllib.parse.urlencode(fields, quote_via=urllib.parse.quote))
 if len(url) > MAX_URL:
-    sys.exit("链接长度 %d 超过 %d，缩短描述类字段后重试" % (len(url), MAX_URL))
+    sys.exit("Link length %d exceeds %d; shorten the description fields and retry" % (len(url), MAX_URL))
 print(url)

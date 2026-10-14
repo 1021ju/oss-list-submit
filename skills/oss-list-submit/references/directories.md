@@ -1,86 +1,86 @@
-# 目录站 / 发布站清单（awesome 列表之外）
+# Directory / launch site list (outside awesome lists)
 
-**上次整体核实：2026-10-14。** 来源有三：Ahrefs 查 9 个同类开源项目的外链（5 个大项目、4 个小项目），GrokBot 在 X 上找真人经验帖，再由 agent 逐站打开核实（只看不提交）。
+**Last full verification: 2026-10-14.** Three sources: Ahrefs backlink data for 9 similar open-source projects (5 large, 4 small), first-hand experience posts on X found by GrokBot, and the agent opening and checking each site (looking only, not submitting).
 
-- **rel 列**：抽一个站上已收录项目的页面，看指向官网或 GitHub 的链接。`follow` 表示没有 nofollow。这是单页抽样，免费档和付费档可能不一样。
-- **未核实**：站点挡了脚本访问（Cloudflare 人机验证）。提交时由用户在浏览器里过验证，agent 顺便把这一行补全。
-- **用之前**：超过 3 个月没核实的行，先打开提交页确认还在、还免费。发现变化就改这份文件，并把核实日期更新掉。
+- **rel column**: taken from one page of a project already listed on the site, looking at the link to the website or GitHub. `follow` means no nofollow. This is a single-page sample; free and paid tiers may differ.
+- **Unverified**: the site blocks script access (Cloudflare bot check). When submitting, the user passes the check in the browser and the agent fills in the row while it's there.
+- **Before use**: for rows not verified in over 3 months, first open the submission page to confirm it still exists and is still free. If anything changed, update this file and the verification date.
 
-## 1. 所有开源项目都提
+## 1. Submit for every open-source project
 
-| 站点 | 提交入口 | 费用 | 登录 | rel | 备注 |
+| Site | Submission page | Cost | Login | rel | Notes |
 |---|---|---|---|---|---|
-| Hacker News · Show HN | news.ycombinator.com/submit（规则：/showhn.html） | 免费 | HN 账号 | follow | 要能直接下载或试用，作者要在帖子里回复。新号容易被限流。上首页才有量 |
-| DevHunt | devhunt.org（Submit → 登录） | 免费；广告 $149/周 | GitHub / Google | follow | 专做开发者工具，有 Open Source 分类。X 上有人反馈比其他发布板效果明显 |
-| PeerPush | peerpush.com/submit | 免费档排在付费用户后面；$39 起 | 要账号 | follow | 输入网址后自动生成草稿，审核后上线 |
-| AlternativeTo | alternativeto.net | 自称免费 | 要账号 | 未核实 | 有 Open Source 标签，按“X 的替代品”挂靠 |
-| SourceForge | sourceforge.net（Import from GitHub） | 免费 | 要账号 | 未核实 | 能从 GitHub 一键导入镜像 |
-| OpenAlternative | openalternative.co/submit | 未核实 | 未核实 | 未核实 | 只收能对标某个商业产品的开源项目 |
-| SaaSHub | saashub.com/submit | 免费，可选付费 | 未核实 | 未核实 | X 上多次被列为“有效果” |
+| Hacker News · Show HN | news.ycombinator.com/submit (rules: /showhn.html) | Free | HN account | follow | Must be downloadable or tryable directly, and the author must reply in the thread. New accounts often get rate-limited. Traffic only comes if it reaches the front page |
+| DevHunt | devhunt.org (Submit → log in) | Free; ads $149/week | GitHub / Google | follow | Focused on developer tools, has an Open Source category. People on X report it works noticeably better than other launch boards |
+| PeerPush | peerpush.com/submit | Free tier is queued behind paid users; from $39 | Account required | follow | Enter a URL and it drafts the listing automatically; goes live after review |
+| AlternativeTo | alternativeto.net | Claims to be free | Account required | Unverified | Has an Open Source tag; listed as "alternative to X" |
+| SourceForge | sourceforge.net (Import from GitHub) | Free | Account required | Unverified | Can mirror from GitHub in one click |
+| OpenAlternative | openalternative.co/submit | Unverified | Unverified | Unverified | Only accepts open-source projects that are an alternative to a specific commercial product |
+| SaaSHub | saashub.com/submit | Free, optional paid | Unverified | Unverified | Listed several times on X as "it works" |
 
-## 2. 中文渠道（主要带曝光和 star）
+## 2. Chinese channels (mainly for exposure and stars)
 
-| 站点 | 提交入口 | 备注 |
+| Site | Submission page | Notes |
 |---|---|---|
-| 阮一峰《科技爱好者周刊》 | github.com/ruanyf/weekly/issues，标题写【开源自荐】 | 免费，编辑挑选，不保证收录 |
-| HelloGitHub | hellogithub.com 里的“提交项目”，或 github.com/521xueweihan/HelloGitHub/issues | 每月 28 日出刊，偏好有趣、入门级的项目 |
-| V2EX 分享创造 | v2ex.com/go/create | 免费，要账号 |
-| 开源中国 | oschina.net/project/new（入口未核实） | |
-| GeekNews（韩国） | news.hada.io/write，Show 栏目 | 要用韩语写摘要 |
+| 阮一峰《科技爱好者周刊》 (Ruan Yifeng's Tech Enthusiast Weekly) | github.com/ruanyf/weekly/issues, with 【开源自荐】 ("open-source self-recommendation") in the title | Free, chosen by the editor, inclusion not guaranteed |
+| HelloGitHub | "提交项目" ("Submit project") on hellogithub.com, or github.com/521xueweihan/HelloGitHub/issues | Published on the 28th of each month; prefers fun, beginner-friendly projects |
+| V2EX 分享创造 ("Share & Create" node) | v2ex.com/go/create | Free, account required |
+| 开源中国 (OSChina) | oschina.net/project/new (submission page unverified) | |
+| GeekNews (Korea) | news.hada.io/write, Show section | Summary must be written in Korean |
 
-## 3. AI / agent 类项目加提
+## 3. Add for AI / agent projects
 
-| 站点 | 提交入口 | 费用 | 登录 | rel | 备注 |
+| Site | Submission page | Cost | Login | rel | Notes |
 |---|---|---|---|---|---|
-| agentindex.app | agentindex.app/submit | 免费 | **不用登录** | follow | 只要 GitHub 仓库链接，人工审核。门槛最低 |
-| FutureTools | futuretools.io/submit-a-tool | 免费 | 不用登录（有验证码） | 未查 | 人工审核，定价选项里有 Open Source |
-| AI Agents Listing | aiagentslisting.com/submit | 免费，但要挂徽章 | 邮箱 | 挂着徽章就是 follow | 徽章放在 README 或网站上，会定期检查，撤掉就降级。**挂徽章前先问作者** |
-| Dang AI | dang.ai/pricing → Submit | 免费要回链、审核 4 周；$49 免回链 | 邮箱 | 未查 | 伪免费 |
-| AI Agent Store | aiagentstore.ai/new-agent | 收录费用未写 | 要登录 | nofollow | 优先级低 |
-| Aixploria | aixploria.com/en/add-ai/ | 免费档未确认 | 未查 | 未查 | 优先级低 |
-| There's An AI For That / Toolify / Futurepedia | 各站 /submit | **通常付费**（帖子里说约 $49 / $99 / $247） | — | 未核实 | 按需付费，零元任务不做 |
+| agentindex.app | agentindex.app/submit | Free | **No login** | follow | Only needs the GitHub repo link; reviewed by a person. Lowest barrier |
+| FutureTools | futuretools.io/submit-a-tool | Free | No login (has CAPTCHA) | Not checked | Reviewed by a person; pricing options include Open Source |
+| AI Agents Listing | aiagentslisting.com/submit | Free, but requires a badge | Email | follow as long as the badge is up | The badge goes in the README or on the website and is checked regularly; removing it gets you downgraded. **Ask the author before adding the badge** |
+| Dang AI | dang.ai/pricing → Submit | Free requires a backlink and 4-week review; $49 without backlink | Email | Not checked | Not really free |
+| AI Agent Store | aiagentstore.ai/new-agent | Listing cost not stated | Login required | nofollow | Low priority |
+| Aixploria | aixploria.com/en/add-ai/ | Free tier unconfirmed | Not checked | Not checked | Low priority |
+| There's An AI For That / Toolify / Futurepedia | /submit on each site | **Usually paid** (posts mention about $49 / $99 / $247) | — | Unverified | Pay only if needed; skip for zero-budget tasks |
 
-## 4. MCP server 加提（先提官方 Registry，其他站会从那里同步）
+## 4. Add for MCP servers (submit to the official Registry first; other sites sync from it)
 
-| 站点 | 提交入口 | 费用 | 登录 | rel | 备注 |
+| Site | Submission page | Cost | Login | rel | Notes |
 |---|---|---|---|---|---|
-| 官方 MCP Registry | `mcp-publisher` CLI，文档 modelcontextprotocol.io/registry/quickstart | 免费 | GitHub | — | 要先把包发到 npm 等仓库。目前还是 preview 版 |
-| Smithery | smithery.ai/servers/new | 免费 | 邮箱 / Google / GitHub | follow | |
-| Glama | glama.ai 的 Add Server | 免费；Boost $49/月 | 未查 | 链 GitHub 的是 follow，链官网的是 nofollow | punkpeye/awesome-mcp-servers 要求新条目带 Glama 徽章 |
-| LobeHub | `lhm` CLI，文档 lobehub.com/publish-mcp/skill.md | 免费 | OIDC，要验证 GitHub 所有权 | follow | 同类 5 个大项目都在上面 |
-| MCP Market | mcpmarket.com/submit | 免费排队 4–6 周；$29 24 小时上线 | 只要邮箱 | follow | 也收 agent skills |
-| mcpservers.org | mcpservers.org/submit | 免费，2 周审核；$39 才给 dofollow | 未查 | 免费版大概率 nofollow | |
-| mcptoplist.com | 不用提交，从各 registry 抓取；可以用 GitHub 认领 | 免费 | GitHub | follow | |
-| PulseMCP / mcp.so / Cursor Directory | 各站提交页 | 未核实 | 未核实 | 未核实 | X 上常被列进 MCP 发布清单 |
+| Official MCP Registry | `mcp-publisher` CLI, docs at modelcontextprotocol.io/registry/quickstart | Free | GitHub | — | The package must be published to npm or another registry first. Still in preview |
+| Smithery | smithery.ai/servers/new | Free | Email / Google / GitHub | follow | |
+| Glama | Add Server on glama.ai | Free; Boost $49/month | Not checked | follow when linking to GitHub, nofollow when linking to the website | punkpeye/awesome-mcp-servers requires new entries to carry a Glama badge |
+| LobeHub | `lhm` CLI, docs at lobehub.com/publish-mcp/skill.md | Free | OIDC, must verify GitHub ownership | follow | All 5 large similar projects are on it |
+| MCP Market | mcpmarket.com/submit | Free queue 4–6 weeks; $29 for live within 24 hours | Email only | follow | Also accepts agent skills |
+| mcpservers.org | mcpservers.org/submit | Free, 2-week review; dofollow only at $39 | Not checked | Free version probably nofollow | |
+| mcptoplist.com | No submission; scraped from the registries; can be claimed with GitHub | Free | GitHub | follow | |
+| PulseMCP / mcp.so / Cursor Directory | Each site's submission page | Unverified | Unverified | Unverified | Often included in MCP launch checklists on X |
 
-## 5. Claude skill / plugin / 库类加提
+## 5. Add for Claude skills / plugins / libraries
 
-| 站点 | 怎么上 | 备注 |
+| Site | How to get listed | Notes |
 |---|---|---|
-| SkillsMP | **不用提交**：仓库里有 SKILL.md，并加上 topic `claude-skills` 或 `claude-code-skill`，每天自动同步 | DR 68，follow |
-| SkillsLLM | skillsllm.com/submit | follow。费用页由 JS 渲染，没读到 |
-| Anthropic 官方插件目录 | claude.com/docs/directory/publish → platform.claude.com/plugins/submissions | 要有付费 Claude 套餐，官方逐个审核。不是外链站，但这是官方入口 |
-| Context7 | context7.com/add-library，贴公开仓库链接 | 让 AI 编码助手能检索到你的文档。适合库、框架、SDK，不算 SEO 外链 |
-| claudemarketplaces.com | 不能提交，只能被抓取（来源：skills.sh、GitHub、MCP registry） | 自称月访客 38 万 |
+| SkillsMP | **No submission**: have a SKILL.md in the repo and add the topic `claude-skills` or `claude-code-skill`; it syncs daily | DR 68, follow |
+| SkillsLLM | skillsllm.com/submit | follow. The pricing page is rendered by JS and couldn't be read |
+| Anthropic official plugin directory | claude.com/docs/directory/publish → platform.claude.com/plugins/submissions | Requires a paid Claude plan; each one is reviewed by Anthropic. Not a backlink site, but it is the official channel |
+| Context7 | context7.com/add-library, paste the public repo link | Lets AI coding assistants find your docs. Suits libraries, frameworks and SDKs; doesn't count as an SEO backlink |
+| claudemarketplaces.com | No submission, scraped only (sources: skills.sh, GitHub, MCP registry) | Claims 380k monthly visitors |
 
-## 6. 发布日渠道（按需）
+## 6. Launch-day channels (as needed)
 
-只有在项目有界面可以演示、团队能在发布当天动员一批人时才做。平时不提。
+Only do these when the project has a UI to demo and the team can rally a group of people on launch day. Don't submit otherwise.
 
-| 站点 | 说明 |
+| Site | Notes |
 |---|---|
-| Product Hunt | 冲进前几名才有量（真人案例：第 4 名带来 930 访客、60+ 注册；没冲上去的 52 访客、0 注册）。链接基本是 nofollow。开源开发者工具优先发 Show HN |
-| Peerlist Launchpad / Fazier / MicroLaunch / Uneed / BetaList | Fazier 免费档要回链、排队 30 天；MicroLaunch 免费档未确认；Uneed 的付费赞助有人反馈完全没效果；BetaList 免费要排 4–6 周 |
+| Product Hunt | Traffic only comes from reaching the top few spots (real cases: #4 brought 930 visitors and 60+ signups; one that didn't make it got 52 visitors and 0 signups). Links are mostly nofollow. For open-source developer tools, do Show HN first |
+| Peerlist Launchpad / Fazier / MicroLaunch / Uneed / BetaList | Fazier's free tier requires a backlink and a 30-day queue; MicroLaunch free tier unconfirmed; people report Uneed's paid sponsorship had no effect at all; BetaList free has a 4–6 week queue |
 
-## 7. 自动出现，不用提交
+## 7. Appears automatically, no submission needed
 
-DeepWiki（查过的 9 个同类项目里有 5 个都有，dofollow）、trendshift.io、ossinsight.io、star-history.com、newreleases.io，以及大量 DR 个位数的 GitHub 聚合站。Chrome 扩展类的 chrome-stats.com、extpose.com 要先上架 Chrome Web Store 才会出现。
+DeepWiki (5 of the 9 similar projects checked have one, dofollow), trendshift.io, ossinsight.io, star-history.com, newreleases.io, plus many GitHub aggregator sites with single-digit DR. For Chrome extensions, chrome-stats.com and extpose.com only show it after it's on the Chrome Web Store.
 
-## 8. 不要碰
+## 8. Don't touch
 
-- **批量目录提交服务**（“一次提交 100–300 个站”）：X 上多人反馈大部分是死链或伪免费。
-- **devtoolsdir.com**：卖“DR Booster”外链套餐，像外链农场，而且要求网站 DR ≥ 10。
-- **eliteai.tools**：收录链接全是 nofollow（连 GitHub 也是），还卖 guest post。
-- **TLDR / AlphaSignal**：没有免费投稿入口，只有广告。
-- **SaaStr AI Agents Directory**：受众是 B2B 销售，不对口。
-- **opensource-observer/oss-directory**：展示页要登录才能看，没有外链价值。
+- **Bulk directory submission services** ("submit to 100–300 sites at once"): many people on X report most are dead links or not really free.
+- **devtoolsdir.com**: sells "DR Booster" backlink packages, looks like a link farm, and requires the website to have DR ≥ 10.
+- **eliteai.tools**: all listing links are nofollow (even GitHub), and it sells guest posts.
+- **TLDR / AlphaSignal**: no free submission channel, ads only.
+- **SaaStr AI Agents Directory**: audience is B2B sales, not a fit.
+- **opensource-observer/oss-directory**: display pages require login to view, no backlink value.

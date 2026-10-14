@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# 安装/卸载定时检查：每 N 小时跑一次 watch_submissions.py，PR/issue 有变化就通知。
-#   bash install_watch.sh            # 默认每 6 小时
-#   bash install_watch.sh 3          # 每 3 小时
+# Install/uninstall the scheduled check: runs watch_submissions.py every N hours and notifies on PR/issue changes.
+#   bash install_watch.sh            # every 6 hours (default)
+#   bash install_watch.sh 3          # every 3 hours
 #   bash install_watch.sh --uninstall
 set -euo pipefail
 
@@ -19,13 +19,13 @@ if [[ "${1:-}" == "--uninstall" ]]; then
   else
     crontab -l 2>/dev/null | grep -v "$SCRIPT" | crontab - || true
   fi
-  echo "已卸载定时检查（提交记录和状态文件保留在 $DATA）"
+  echo "Scheduled check uninstalled (tracker and state files kept in $DATA)"
   exit 0
 fi
 
 HOURS="${1:-6}"
-[[ -n "$GH" ]] || { echo "没找到 gh，先安装并 gh auth login"; exit 1; }
-gh auth status >/dev/null 2>&1 || { echo "gh 未登录，先运行 gh auth login"; exit 1; }
+[[ -n "$GH" ]] || { echo "gh not found. Install it and run gh auth login first"; exit 1; }
+gh auth status >/dev/null 2>&1 || { echo "gh is not logged in. Run gh auth login first"; exit 1; }
 mkdir -p "$DATA"
 [[ -f "$DATA/submissions.csv" ]] || cp "$DIR/../references/tracker-template.csv" "$DATA/submissions.csv"
 PATHS="$(dirname "$GH"):$(dirname "$PY"):/usr/bin:/bin:/usr/local/bin:/opt/homebrew/bin"
@@ -52,4 +52,4 @@ else
   (crontab -l 2>/dev/null | grep -v "$SCRIPT"; echo "$LINE") | crontab -
 fi
 
-echo "已安装：每 $HOURS 小时检查一次 $DATA/submissions.csv 里的 PR/issue"
+echo "Installed: checks the PRs/issues in $DATA/submissions.csv every $HOURS hours"

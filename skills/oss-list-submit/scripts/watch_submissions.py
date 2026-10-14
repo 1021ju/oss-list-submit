@@ -47,10 +47,10 @@ def readme_has(list_repo, needle):
 
 
 def notify(title, body, url):
-    log("[通知] %s | %s" % (title, body))
+    log("[notify] %s | %s" % (title, body))
     if DRY:
         return
-    if shutil.which("terminal-notifier"):  # 可选：点通知直接打开 PR
+    if shutil.which("terminal-notifier"):  # optional: clicking the notification opens the PR
         subprocess.run(["terminal-notifier", "-title", title, "-message", body, "-open", url],
                        capture_output=True)
     elif sys.platform == "darwin":
@@ -62,7 +62,7 @@ def notify(title, body, url):
 
 def check(row):
     """Return (snapshot dict, our repo needle) for one tracker row, or None if no GitHub link."""
-    m = LINK_RE.search(row.get("PR或表单回执链接", ""))
+    m = LINK_RE.search(row.get("receipt_url", ""))
     if not m:
         return None
     owner, repo, kind, num = m.groups()
@@ -77,14 +77,14 @@ def check(row):
     snap = {"url": url, "list": "%s/%s" % (owner, repo), "kind": kind,
             "state": d["state"], "reason": d.get("stateReason") or "",
             "others": len(others)}
-    target = row.get("指向的URL", "")
+    target = row.get("target_url", "")
     needle = re.sub(r"^https?://(www\.)?", "", target).rstrip("/") or url
     return snap, needle
 
 
 def main():
     if not os.path.exists(TRACKER):
-        print("没有找到提交记录 %s，先按 skill 第 6 步记录提交。" % TRACKER)
+        print("Tracker %s not found. Record submissions first (skill step 6)." % TRACKER)
         return
     state = json.load(open(STATE, encoding="utf-8")) if os.path.exists(STATE) else {}
     with open(TRACKER, encoding="utf-8-sig", newline="") as f:
@@ -97,16 +97,16 @@ def main():
         try:
             got = check(row)
         except Exception as e:
-            log("查询失败 %s: %s" % (row.get("PR或表单回执链接", ""), e))
+            log("Query failed %s: %s" % (row.get("receipt_url", ""), e))
             continue
         if not got:
             continue
         snap, needle = got
         old = state.get(snap["url"])
-        who = row.get("提交人账号", "")
-        name = "%s（%s%s）" % (snap["list"], row.get("项目", ""), "，提交人 " + who if who else "")
+        who = row.get("submitter", "")
+        name = "%s (%s%s)" % (snap["list"], row.get("project", ""), ", submitter " + who if who else "")
         if old is None:
-            # 第一次见到：还开着就只记基线；已经合并/关闭的照常走下面的通知和状态更新
+            # First time seen: if still open, just record a baseline; if already merged/closed, go through the notification and status update below as usual
             old = {"state": "OPEN", "others": snap["others"]}
             if snap["state"] == "OPEN":
                 state[snap["url"]] = snap
@@ -116,22 +116,22 @@ def main():
             if snap["state"] == "MERGED" or (snap["kind"] == "issues" and snap["state"] == "CLOSED"
                                             and snap["reason"] == "COMPLETED"):
                 listed = readme_has(snap["list"], needle)
-                status = "已上线" if listed else "已合并（README 里还没找到条目）"
-                notify("🎉 " + ("PR 已合并" if snap["kind"] == "pull" else "issue 已处理"),
+                status = "live" if listed else "merged (entry not found in README yet)"
+                notify("🎉 " + ("PR merged" if snap["kind"] == "pull" else "Issue resolved"),
                        "%s → %s\n%s" % (name, status, snap["url"]), snap["url"])
             elif snap["state"] == "CLOSED":
-                status = "被拒（关闭未合并）"
-                notify("PR/issue 被关闭", "%s 没有被收录，去看看原因\n%s" % (name, snap["url"]), snap["url"])
+                status = "rejected (closed without merging)"
+                notify("PR/issue closed", "%s was not accepted, check why\n%s" % (name, snap["url"]), snap["url"])
             else:
-                status = row.get("状态", "")
-            if status and row.get("状态") != status:
-                row["状态"], row["复核日期"], changed = status, today, True
+                status = row.get("status", "")
+            if status and row.get("status") != status:
+                row["status"], row["checked_on"], changed = status, today, True
         elif snap["others"] > old.get("others", 0):
-            notify("维护者回复了", "%s 有新的回复或 review，记得回\n%s" % (name, snap["url"]), snap["url"])
+            notify("Maintainer replied", "%s has a new reply or review, remember to respond\n%s" % (name, snap["url"]), snap["url"])
         state[snap["url"]] = snap
 
     if DRY:
-        log("dry-run：检查完成，没有写入任何文件")
+        log("dry-run: check finished, no files written")
         return
     json.dump(state, open(STATE, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
     if changed:
