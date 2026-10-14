@@ -12,7 +12,7 @@ description: Use when someone wants to promote a company open-source GitHub proj
 | 需要 | Claude Code | Codex | Cursor |
 |---|---|---|---|
 | GitHub 查询、开 PR、定时监听 | `gh` CLI | `gh` CLI | `gh` CLI |
-| 打开目录站、填表、核验 `href` | Claude in Chrome 扩展 | [Tabgent](https://github.com/FibonaAI/tabgent)（Codex 的 Chrome 侧栏） | Cursor 自带的浏览器工具（如果开启了） |
+| 打开目录站、填表、核验 `href` | Claude in Chrome 扩展 | Codex 自带的 browser use，或装了的其他浏览器插件（如 [Tabgent](https://github.com/FibonaAI/tabgent)） | Cursor 自带的浏览器工具（如果开启了） |
 
 读公开页、查 `href` 也可以直接用 `curl`。
 
@@ -30,7 +30,17 @@ description: Use when someone wants to promote a company open-source GitHub proj
 
 repo URL、一句话定位（≤ 15 词英文）、类别（MCP server / agent / CLI / 库 + 语言）、star 数、首次提交日期、license、公司域名上有没有项目页、提交人的 GitHub 账号。
 
-仓龄、star 数和 license 是很多列表的准入门槛。用 `gh api repos/<o>/<r>` 查 star 数和 license，首次提交日期要翻 commits 的最后一页（`gh api` 默认只拿到最近一页）。
+仓龄、star 数和 license 是很多列表的准入门槛：
+
+```bash
+O=<owner>; P=<repo>
+gh api repos/$O/$P --jq '{stars:.stargazers_count, license:.license.spdx_id, homepage, topics, private}'
+gh api -i "repos/$O/$P/commits?per_page=1" | grep -i '^link:'      # 取 rel="last" 的 page=N
+gh api "repos/$O/$P/commits?per_page=1&page=N" --jq '.[0].commit.committer.date'   # 首次提交日期
+gh api users/$O --jq .blog                                          # 组织官网（组织也用 users/ 接口）
+```
+
+**预检：repo 现在能不能拿出去提。** README 里还写着 private / WIP / coming soon、没有安装说明、没有 license，或者 repo 还没公开，先停下来告诉作者要补什么，不要往下走。没有 topics、没填 homepage 也一并提醒（加不加由作者决定）。
 
 ### 2. 找 awesome 列表并检查活跃度
 
@@ -38,13 +48,13 @@ repo URL、一句话定位（≤ 15 词英文）、类别（MCP server / agent /
 
 ```bash
 L=<owner/list>; R=<我们的repo名>
-gh repo view $L --json isArchived,pushedAt                                     # 是否归档
+gh repo view $L --json isArchived                                              # 是否归档（pushedAt 含任何分支的 push，不能当维护信号）
 gh api "repos/$L/commits?per_page=1" --jq '.[0].commit.committer.date'         # 默认分支最后一次提交（列表仓库基本等于最后一次合并）
-gh pr list -R $L --state merged --search "sort:updated-desc" -L 20 --json mergedAt --jq 'map(.mergedAt)|max'  # 最近一次合并 PR
+gh pr list -R $L --state merged --search "sort:updated-desc" -L 20 --json mergedAt --jq 'map(.mergedAt)|max'  # 最近一次合并 PR；输出 null = 从没合并过 PR
 gh api "search/issues?q=repo:$L+is:pr+is:open&per_page=1" --jq .total_count      # open PR 的真实数量（gh pr list -L 会截断）
 gh pr list -R $L --state open --search "sort:created-asc" -L 1 --json createdAt --jq '.[0].createdAt'  # 最老的 open PR
-gh api "repos/$L/contents/.github/workflows" --jq '.[].name'                      # 然后逐个读 YAML 和它引用的脚本/配置；404 = 没配 CI
-gh api repos/$L/contents/README.md -H "Accept: application/vnd.github.raw" | grep -i $R  # README 查重（超过 1MB 时必须加 raw 头）
+gh api "repos/$L/contents/.github/workflows" --jq '.[].name' 2>/dev/null || echo "没有 CI"   # 有的话逐个读 YAML 和它引用的脚本/配置
+gh api repos/$L/contents/README.md -H "Accept: application/vnd.github.raw" | grep -i $R || echo "README 里没有"  # README 查重（超过 1MB 时必须加 raw 头）
 gh search prs --repo $L $R --json number,state,author; gh search issues --repo $L $R --json number,state  # 已开的 PR/issue 查重
 ```
 
@@ -52,9 +62,9 @@ gh search prs --repo $L $R --json number,state,author; gh search issues --repo $
 |---|---|
 | 归档 | `isArchived: true` → 跳过 |
 | 维护 | 最后一次提交和最近一次合并都在 90 天以前 → 跳过。如果没有任何合并记录（可能是维护者直接 push），以默认分支最后一次提交为准，并在记录里注明 |
-| 提交入口 | 先确认这个列表收不收外部 PR：读 CONTRIBUTING 和 issue 模板，有些列表只收 issue（外部开 PR 会被拦）。按它的实际入口出草稿 |
-| 积压 | 不作为跳过理由，但要把数量和最老日期如实告诉作者，不要折算成“要等几天”。只收 issue 的列表，看的是 issue 队列 |
-| 准入门槛 | CONTRIBUTING、PR/issue 模板、CI 引用的脚本和配置（不能只看文件名）。star、仓龄、license、徽章、manifest 等要求不满足就跳过，并写明“补齐什么之后可以提” |
+| 提交入口 | 先确认这个列表收不收外部 PR：读 CONTRIBUTING 和 issue 模板，有些列表只收 issue（外部开 PR 会被拦）。按它的实际入口出草稿。PR 和表单都开放时，选 CONTRIBUTING 推荐的那个；没写就选 PR，进度看得见 |
+| 积压 | 本身不作为跳过理由，把数量和最老日期如实告诉作者，不要折算成“要等几天”。如果最老的 open PR 超过半年，而且近期合并的几乎都是维护者自己的 PR，就写明“大概率排不进去”，由作者决定提不提。只收 issue 的列表，看的是 issue 队列 |
+| 准入门槛 | CONTRIBUTING、PR/issue 模板、CI 引用的脚本和配置（不能只看文件名）。star、仓龄、license、徽章、manifest 等要求不满足就跳过，并写明“补齐什么之后可以提”。只写了模糊门槛（比如“不收太新的项目”）的，把原话给作者，由作者判断 |
 | 对口 | 同类项目放在哪个分类，我们就放哪个；找不到合适的分类就跳过，不要硬塞 |
 | 重复 | README 已收录，或者已经有 open 的 PR/issue（不管是谁开的）→ 跳过，不要重复提 |
 
@@ -62,7 +72,7 @@ gh search prs --repo $L $R --json number,state,author; gh search issues --repo $
 
 ### 3. 写 awesome 条目草稿
 
-严格照抄该列表现有条目的格式：链接写法、描述长度、句尾标点、emoji 和徽章。语言、部署方式这类图标按 repo 的实际情况选，不知道就查，不要猜。
+严格照抄该列表现有条目的**格式**：链接写法、描述长度、句尾标点、emoji 和徽章。**措辞不照抄**：相邻条目用了破折号、“AI-powered” 这类禁用写法，我们的条目照样按文末“文案规则”写。语言、部署方式这类图标按 repo 的实际情况选，不知道就查，不要猜。
 
 - **分类**：同类项目分散在几个分类时，选和我们功能最接近的那一个，草稿里写明理由，让作者确认。
 - **插入位置**：分类本身按字母序排，就按字母序插；分类本身没排序，就加在末尾。
@@ -80,7 +90,7 @@ PR 正文: ...
 
 ### 4. 外链 / 目录站：先过筛选关
 
-**先看 `references/directories.md`**：这是已经核实过、分好层的清单。按项目类型选层：所有项目都提第 1 层；AI/agent、MCP、skill 类项目再加对应的层；中文渠道看团队需不需要；发布日渠道按需。清单里标“未核实”的行，提交时顺便补全；超过 3 个月没核实的行，先确认提交页还在。
+**先看 `references/directories.md`**：这是已经核实过、分好层的清单。按项目类型选层：第 1 层是所有项目都考虑的，但 Show HN 要等项目能一条命令装好或在线试用、README 写清楚了再发，这之前先跳过；AI/agent、MCP、skill 类项目再加对应的层；中文渠道看团队需不需要；发布日渠道按需。清单里标“未核实”的行，提交时顺便补全；超过 3 个月没核实的行，先确认提交页还在。没有浏览器、看不到表单时，按通用字段出文案（名称、一句话介绍、详细描述、网址、分类、标签、Logo、截图），注明“字段以实际表单为准”。
 
 清单之外新发现的站，不看 DR（站点权重分），只过下面五项。查不到的项标“未查”，不能当作通过。通过的站补进 `directories.md`：
 
@@ -96,7 +106,7 @@ PR 正文: ...
 
 ### 5. 提交（永远用提交人自己的 GitHub 账号）
 
-先运行 `gh auth status` 看当前环境，再选一种方式：
+先运行 `gh api user --jq .login`，确认登录的就是第 1 步记下的提交人账号，再选一种方式：
 
 **A. 本机 `gh` 已登录提交人自己的账号（Claude Code / Codex / Cursor 的常见情况）**
 
@@ -134,6 +144,7 @@ PR 正文: ...
 
 ```bash
 gh search prs "<owner>/<repo>" --json url,author,state ; gh search issues "<owner>/<repo>" --json url,author,state
+gh search prs --repo <list> <repo名> --json url,author,state    # 全局搜会漏，对每个提过的列表再按 --repo 搜一遍
 gh search prs "<repo名> in:title" --json url,author,state      # 有些 PR 正文里的链接没被索引，标题再搜一遍；结果要人工确认是不是我们的项目
 ```
 
@@ -147,23 +158,33 @@ gh search prs "<repo名> in:title" --json url,author,state      # 有些 PR 正�
 bash <本 skill 目录>/scripts/install_watch.sh        # 默认每 6 小时检查一次；--uninstall 卸载
 ```
 
-- macOS 用 launchd，Linux 用 crontab，只依赖 `python3` 和已登录的 `gh`，Claude Code、Codex、Cursor 都能用。
+- macOS 用 launchd，Linux 用 crontab，只依赖 `python3` 和已登录的 `gh`。它是系统自带的定时任务，不靠 Claude Code、Codex 或 Cursor：agent 关了、电脑重启后照样按时检查。不要改用 agent 自己的定时功能，那些大多要会话开着才跑。
+- 本机装了 `terminal-notifier`（`brew install terminal-notifier`，可选）时，点通知直接打开对应的 PR；没装就用系统自带方式弹，通知上会显示“脚本编辑器”，点了不会跳转。
 - 检测到这些变化时，会弹系统通知：PR 合并、issue 被处理、PR/issue 被关闭、维护者有新回复或 review。合并之后它会去读列表的 README，确认条目真的出现了，再把状态改成“已上线”。
-- 想同时推到飞书或 Slack 群：在 `~/.oss-list-submit/config` 里写一行 `NOTIFY_WEBHOOK=<webhook 地址>`。团队共用一个群机器人的话，地址找管理这个机器人的人要。**webhook 地址谁拿到都能往群里发消息，不能写进 repo、skill 或提交记录。** 每条消息都以 `[oss-list-submit]` 开头，可以在机器人的安全设置里把它设成关键词。
 - 想马上查一次：`python3 <本 skill 目录>/scripts/watch_submissions.py`，加 `--dry-run` 就只看不写。
 - 收到“维护者回复了”要尽快回。维护者提了修改意见没人理，PR 通常会被直接关掉。
 
 目录站的表单没有 PR 可以监听，一周后手动复查一次：页面有没有上线，`href` 和 `rel` 是什么。
 
-## 文案规则（条目描述、PR / issue 正文）
+## 文案规则（所有要发出去的文字：条目、PR / issue 正文、目录站表单、Show HN / V2EX 帖子）
 
-维护者每天收到大量 AI 生成的 PR，一看到营销腔就会直接关掉。
+维护者和目录站审核每天都收到大量 AI 生成的提交，读者一眼就能认出 AI 腔，看出来就直接关掉或划走。
 
-- **条目描述**：一句话说清它做什么，长度和句式照抄相邻条目。写具体功能（“reads the current page, fills forms”），不写形容词。
-- **禁用词**：revolutionary、seamless、powerful、cutting-edge、game-changing、next-gen、ultimate、effortless、supercharge、unlock、leverage、robust、best-in-class。
-- **只写能核实的事实**：star 数要带日期；没有的用户数、下载量不要写。还在早期就写 early preview。
-- **PR / issue 正文写 3–5 句**：加了什么、放在哪个分类以及理由、提交人和项目的关系（比如“I'm on the team behind X”）。不写 “I'm excited to share”，不加 emoji（列表要求的除外）。
-- 写长文（比如发布帖）时，如果装了 anti-ai-slop-writing 之类的写作 skill，可以配合使用。本 skill 不依赖它。
+**所有文字都适用：**
+- **禁用词**：revolutionary、seamless、powerful、cutting-edge、game-changing、next-gen、ultimate、effortless、supercharge、unlock、leverage、robust、best-in-class、empower、elevate、streamline、harness、delve、comprehensive、innovative、transform、in today's fast-paced world；中文同理：赋能、颠覆、一站式、极致、全方位、助力。想用的时候换成具体做了什么。
+- **写具体动作，不写形容词**：“reads the current tab and fills forms” 胜过 “powerful browser automation”。
+- **只写能核实的事实**：star 数要带日期；没有的用户数、下载量、案例一律不编。还在早期就写 early preview。
+- **标点和格式**：破折号（—）全文最多一个；不用感叹号；不用 emoji 当列表符号；不堆 hashtag。
+- **别三个三个地列**：特性、优点不要凑成三条一组，有几条写几条。
+- **句子长短要混着来**，不要连着三句一样长、一样的结构。
+
+**按场景：**
+- **awesome 列表条目**：一句话说清它做什么，长度和句式照抄相邻条目。
+- **PR / issue 正文**：3–5 句，写加了什么、放在哪个分类以及理由、提交人和项目的关系（比如 “I'm on the team behind X”）。不写 “I'm excited to share”。
+- **目录站表单**：一句话介绍（tagline）写“给谁、做什么”，不写口号；详细描述按这个站的受众改写，每个站不一样；分类和标签只选真对口的。
+- **Show HN / V2EX / 周刊自荐**：用第一人称、像人说话（用缩写 I'm / it's / don't），开头直接说做了什么、为什么做；写一个真实的限制或还没解决的问题；不用标题和加粗，不以 “As a developer, I…” 开头。发之前给用户过目。
+
+写完逐条自查一遍：有没有禁用词？有没有编出来的数字？是不是任何项目都能套用这段话？能套用就加具体细节重写。
 
 ## 常见错误
 

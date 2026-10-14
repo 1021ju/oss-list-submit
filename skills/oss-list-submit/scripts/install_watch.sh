@@ -53,4 +53,3 @@ else
 fi
 
 echo "已安装：每 $HOURS 小时检查一次 $DATA/submissions.csv 里的 PR/issue"
-echo "想同时推到飞书/Slack 群：echo 'NOTIFY_WEBHOOK=<webhook地址>' >> $DATA/config"

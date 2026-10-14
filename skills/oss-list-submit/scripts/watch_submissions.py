@@ -3,8 +3,6 @@
 
 Tracker:  ~/.oss-list-submit/submissions.csv   (header = references/tracker-template.csv)
 State:    ~/.oss-list-submit/state.json
-Config:   ~/.oss-list-submit/config            (optional, KEY=VALUE lines)
-          NOTIFY_WEBHOOK=<飞书/Lark 或 Slack incoming webhook URL>
 
 Usage: python3 watch_submissions.py [--dry-run]
 Only needs python3 (stdlib) and a logged-in `gh`.
@@ -17,12 +15,10 @@ import re
 import shutil
 import subprocess
 import sys
-import urllib.request
 
 HOME = os.environ.get("OSS_LIST_SUBMIT_HOME") or os.path.expanduser("~/.oss-list-submit")
 TRACKER = os.path.join(HOME, "submissions.csv")
 STATE = os.path.join(HOME, "state.json")
-CONFIG = os.path.join(HOME, "config")
 LOG = os.path.join(HOME, "watch.log")
 LINK_RE = re.compile(r"https://github\.com/([^/\s]+)/([^/\s]+)/(pull|issues)/(\d+)")
 DRY = "--dry-run" in sys.argv
@@ -50,38 +46,18 @@ def readme_has(list_repo, needle):
     return out.returncode == 0 and needle.lower() in out.stdout.lower()
 
 
-def load_config():
-    cfg = {}
-    if os.path.exists(CONFIG):
-        for line in open(CONFIG, encoding="utf-8"):
-            if "=" in line and not line.lstrip().startswith("#"):
-                k, v = line.split("=", 1)
-                cfg[k.strip()] = v.strip()
-    return cfg
-
-
-def notify(title, body, cfg):
+def notify(title, body, url):
     log("[通知] %s | %s" % (title, body))
     if DRY:
         return
-    if sys.platform == "darwin":
+    if shutil.which("terminal-notifier"):  # 可选：点通知直接打开 PR
+        subprocess.run(["terminal-notifier", "-title", title, "-message", body, "-open", url],
+                       capture_output=True)
+    elif sys.platform == "darwin":
         script = 'display notification %s with title %s' % (json.dumps(body), json.dumps(title))
         subprocess.run(["osascript", "-e", script], capture_output=True)
     elif shutil.which("notify-send"):
         subprocess.run(["notify-send", title, body], capture_output=True)
-    hook = cfg.get("NOTIFY_WEBHOOK")
-    if hook:
-        text = "[oss-list-submit] %s\n%s" % (title, body)
-        if "feishu" in hook or "larksuite" in hook:
-            payload = {"msg_type": "text", "content": {"text": text}}
-        else:
-            payload = {"text": text}
-        req = urllib.request.Request(hook, data=json.dumps(payload).encode("utf-8"),
-                                     headers={"Content-Type": "application/json"})
-        try:
-            urllib.request.urlopen(req, timeout=15).read()
-        except Exception as e:  # webhook 失败不影响本地通知
-            log("webhook 发送失败: %s" % e)
 
 
 def check(row):
@@ -110,7 +86,6 @@ def main():
     if not os.path.exists(TRACKER):
         print("没有找到提交记录 %s，先按 skill 第 6 步记录提交。" % TRACKER)
         return
-    cfg = load_config()
     state = json.load(open(STATE, encoding="utf-8")) if os.path.exists(STATE) else {}
     with open(TRACKER, encoding="utf-8-sig", newline="") as f:
         reader = csv.DictReader(f)
@@ -143,16 +118,16 @@ def main():
                 listed = readme_has(snap["list"], needle)
                 status = "已上线" if listed else "已合并（README 里还没找到条目）"
                 notify("🎉 " + ("PR 已合并" if snap["kind"] == "pull" else "issue 已处理"),
-                       "%s → %s\n%s" % (name, status, snap["url"]), cfg)
+                       "%s → %s\n%s" % (name, status, snap["url"]), snap["url"])
             elif snap["state"] == "CLOSED":
                 status = "被拒（关闭未合并）"
-                notify("PR/issue 被关闭", "%s 没有被收录，去看看原因\n%s" % (name, snap["url"]), cfg)
+                notify("PR/issue 被关闭", "%s 没有被收录，去看看原因\n%s" % (name, snap["url"]), snap["url"])
             else:
                 status = row.get("状态", "")
             if status and row.get("状态") != status:
                 row["状态"], row["复核日期"], changed = status, today, True
         elif snap["others"] > old.get("others", 0):
-            notify("维护者回复了", "%s 有新的回复或 review，记得回\n%s" % (name, snap["url"]), cfg)
+            notify("维护者回复了", "%s 有新的回复或 review，记得回\n%s" % (name, snap["url"]), snap["url"])
         state[snap["url"]] = snap
 
     if DRY:
